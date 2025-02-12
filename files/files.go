@@ -1,47 +1,36 @@
 package main
 
 import (
-	"bufio"
 	"fmt"
+	"io"
 	"os"
 )
 
+func copyFile(src, dst string) error {
+	sourceFile, err := os.Open(src)
+	if err != nil {
+		return fmt.Errorf("файл не найден: %v", err)
+	}
+	defer sourceFile.Close()
+
+	destinationFile, err := os.Create(dst)
+	if err != nil {
+		return fmt.Errorf("ошибка при создании файла: %v", err)
+	}
+	defer destinationFile.Close()
+
+	_, err = io.Copy(destinationFile, sourceFile)
+	if err != nil {
+		return fmt.Errorf("ошибка при копировании файла: %v", err)
+	}
+	return nil
+}
+
 func main() {
-	file, err := os.OpenFile("notes.txt", os.O_APPEND|os.O_CREATE|os.O_WRONLY, 0644)
+	err := copyFile("source.txt", "copy.txt")
 	if err != nil {
-		fmt.Println("Ошибка при открытии файла:", err)
-		return
-	}
-
-	defer file.Close()
-
-	fmt.Print("Введите текст для сохранения: ")
-	scanner := bufio.NewScanner(os.Stdin)
-	scanner.Scan()
-	input := scanner.Text()
-
-	_, err = file.WriteString(input + "\n")
-	if err != nil {
-		fmt.Println("Ошибка при записи в файл: ", err)
-		return
-	}
-	fmt.Println("Запись сохранена в notes.txt!")
-
-	fmt.Println("\nСодержимое notes.txt:")
-	readFile, err := os.Open("notes.txt")
-	if err != nil {
-		fmt.Println("Ошибка при чтении файла:", err)
-		return
-	}
-
-	defer readFile.Close()
-
-	reader := bufio.NewScanner(readFile)
-	for reader.Scan() {
-		fmt.Println(reader.Text())
-	}
-
-	if err := reader.Err(); err != nil {
-		fmt.Println("Ошибка при чтении:", err)
+		fmt.Println("ошибка: ", err)
+	} else {
+		fmt.Println("Файл успешно скопирован!")
 	}
 }
